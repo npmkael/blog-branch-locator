@@ -27,13 +27,4 @@ class Author extends Model
     {
         return $this->hasMany(Post::class);
     }
-
-    protected static function booted(): void
-    {
-        static::saving(function (Author $author) {
-            if (empty($author->slug) && !empty($author->name)) {
-                $author->slug = Str::slug($author->name);
-            }
-        });
-    }
 }
