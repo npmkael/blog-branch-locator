@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\BranchController;
 use Illuminate\Support\Facades\Route;
 
 // Posts
@@ -11,4 +12,9 @@ Route::get('/posts/{slug}', [PostController::class, 'show'])->name('api.posts.sh
 // Categories
 Route::get('/categories', [CategoryController::class, 'index'])->name('api.categories.index');
 Route::get('/categories/{slug}/posts', [CategoryController::class, 'posts'])->name('api.categories.posts');
+
+// Branches
+Route::get('/branches', [BranchController::class, 'index'])->name('api.branches.index');
+Route::get('/branches/{slug}', [BranchController::class, 'show'])->name('api.branches.show');
+
 ?>
