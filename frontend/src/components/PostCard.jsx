@@ -1,5 +1,6 @@
 import { Link } from 'react-router'
 import { User, CalendarBlank } from '@phosphor-icons/react'
+import { formatDate } from '../utils/formatDate'
 
 function PostCard({ post }) {
   return (
@@ -62,7 +63,7 @@ function PostCard({ post }) {
               )}
               {post.published_date && (
                 <span className="flex items-center gap-1.5 font-['Geist_Mono'] text-[10px] uppercase tracking-[0.06em] text-zinc-600">
-                  {post.published_date}
+                  {formatDate(post.published_date)}
                 </span>
               )}
             </div>

@@ -88,7 +88,7 @@ function BlogDetail() {
           {post.title}
         </h1>
 
-        <p className="font-['Geist'] mt-3 text-[16px] leading relaxed text-gray-500">
+        <p className="font-['Geist'] mt-3 text-[16px] leading-relaxed text-gray-500">
           {post.excerpt}
         </p>
 
@@ -127,7 +127,7 @@ function BlogDetail() {
       )}
 
       <div
-        className="prose max-w-none prose-p:my-4 prose-headings:my-4"
+        className="prose max-w-none prose-p:my-4 prose-headings:my-4 prose-headings:font-['Geist'] prose-p:font-['Source_Serif_4']"
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
 

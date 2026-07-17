@@ -1,11 +1,5 @@
 import { Link } from 'react-router'
-
-function formatDate(value) {
-  if (!value) return ''
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return value
-  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-}
+import { formatDate } from '../utils/formatDate'
 
 function PostListItem({ post }) {
   return (
@@ -34,7 +28,7 @@ function PostListItem({ post }) {
           )}
         </div>
 
-        <h2 className="font-['Geist'] tmt-1text-[18px] font-semibold leading-snug text-ink transition-colors group-hover:text-gray-500">
+        <h2 className="font-['Geist'] mt-1 text-[18px] font-semibold leading-snug text-ink transition-colors group-hover:text-gray-500">
           {post.title}
         </h2>
 
