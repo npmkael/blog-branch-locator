@@ -2,6 +2,11 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router'
 import client from '../api/client'
 import Loading from '../components/Loading'
+import { CaretLeftIcon } from '@phosphor-icons/react'
+import { User } from '@phosphor-icons/react'
+
+// utils
+import { formatDate } from '../utils/formatDate'
 
 function BlogDetail() {
   const { slug } = useParams()
@@ -48,36 +53,77 @@ function BlogDetail() {
     return <div className="text-center py-12 text-red-600">{error}</div>
 
   return (
-    <article className="max-w-3xl mx-auto">
+    <article className="max-w-5xl mx-auto">
       <Link
         to="/blog"
-        className="text-blue-600 hover:underline text-sm mb-6 inline-block"
+        className="inline-flex items-center gap-1.5 font-['Geist_Mono'] text-[12px] text-gray-500 hover:text-ink"
       >
-        ← Back to Blog
+        <CaretLeftIcon />
+        all posts.
       </Link>
 
-      {post.category && (
+      {/* {post.category && (
         <Link
           to={`/category/${post.category.slug}`}
           className="text-sm text-blue-600 hover:underline"
         >
           {post.category.name}
         </Link>
-      )}
+      )} */}
 
-      <h1 className="text-3xl sm:text-4xl font-bold mt-2 mb-4">{post.title}</h1>
+      {/* header */}
+      <header className="mt-8">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-['Geist_Mono'] text-[11px] uppercase tracking-wider text-gray-400">
+          <time>{formatDate(post.published_date)}</time>
+          <span className="text-gray-300">·</span>
+          <Link
+            to={`/category/${post.category.slug}`}
+            className="hover:text-ink transition-colors duration-200"
+          >
+            {post.category.name}
+          </Link>
+        </div>
 
-      <div className="flex items-center gap-3 text-sm text-neutral-500 mb-8">
-        {post.author && <span>By {post.author.name}</span>}
-        {post.published_date && <span>• {post.published_date}</span>}
-      </div>
+        <h1 className="font-['Geist'] mt-3 text-[28px] font-semibold leading-tight tracking-tight text-ink sm:text-[34px]">
+          {post.title}
+        </h1>
 
+        <p className="font-['Geist'] mt-3 text-[16px] leading relaxed text-gray-500">
+          {post.excerpt}
+        </p>
+
+        <div className="mt-5 flex items-center gap-2.5 border-t border-gray-200 pt-5">
+          {post.author && (
+            <>
+              {post.author.profile_image ? (
+                <img
+                  src={post.author.profile_image}
+                  alt={post.author.name}
+                  className="h-8 w-8 shrink-0 rounded-full border border-gray-200 object-cover"
+                />
+              ) : (
+                <div className="h-8 w-8 shrink-0 rounded-full border border-gray-200  flex items-center justify-center">
+                  <User size={16} weight="regular" className="text-zinc-400" />
+                </div>
+              )}
+            </>
+          )}
+
+          <div className="font-['Geist'] text-[13px] font-medium text-ink">
+            {post.author?.name}
+          </div>
+        </div>
+      </header>
+
+      {/* featured image */}
       {post.featured_image && (
-        <img
-          src={post.featured_image}
-          alt={post.title}
-          className="w-full rounded-lg mb-8 object-cover max-h-96"
-        />
+        <figure className="mt-8 overflow-hidden rounded-xl bg-gray-100">
+          <img
+            src={post.featured_image}
+            alt={post.title}
+            className="aspect-[2/1] w-full object-cover"
+          />
+        </figure>
       )}
 
       <div
@@ -85,11 +131,18 @@ function BlogDetail() {
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
 
-      <div className="mt-12 pt-6 border-t border-neutral-200">
-        <Link to="/blog" className="text-blue-600 hover:underline">
-          ← Back to Blog
+      <footer
+        className="mt-12 flex items-center 
+      justify-between border-t border-gray-200 pt-6"
+      >
+        <Link
+          to="/blog"
+          className="inline-flex items-center gap-1.5 font-['Geist_Mono'] text-[12px] text-gray-500 hover:text-ink"
+        >
+          <CaretLeftIcon />
+          all posts.
         </Link>
-      </div>
+      </footer>
     </article>
   )
 }
