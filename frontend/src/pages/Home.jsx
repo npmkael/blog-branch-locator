@@ -57,7 +57,7 @@ function Home() {
             bloggy
           </h1>
           <p
-            className="font-['Source_Serif_4'] text-[17px] text-zinc-500 dark:text-zinc-400 leading-[1.75] max-w-xl mx-auto mb-10 animate-fade-up"
+            className="font-['Geist'] text-[17px] text-zinc-500 dark:text-zinc-400 leading-[1.75] max-w-xl mx-auto mb-10 animate-fade-up"
             style={{ animationDelay: '130ms' }}
           >
             Insights, tutorials, and stories from our team. Explore our latest
