@@ -1,32 +1,46 @@
 import { useEffect, useState } from 'react'
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  CaretLeft,
+  CaretRight,
+  List,
+  SquaresFour,
+} from '@phosphor-icons/react'
 import client from '../api/client'
 import PostCard from '../components/PostCard'
+import PostListItem from '../components/PostListItem'
 import Loading from '../components/Loading'
 
 function BlogList() {
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
-  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState(null)
-  const [nextPage, setNextPage] = useState(1)
-  const [hasMore, setHasMore] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [lastPage, setLastPage] = useState(1)
+  const [view, setView] = useState(() => {
+    if (typeof window === 'undefined') return 'list'
+    return localStorage.getItem('blog-view') || 'list'
+  })
 
-  async function loadPosts(page = 1, append = false) {
+  function switchView(next) {
+    setView(next)
+    localStorage.setItem('blog-view', next)
+  }
+
+  async function loadPosts(page = 1) {
     try {
-      if (append) setLoadingMore(true)
+      setLoading(true)
       const res = await client.get(`/posts?page=${page}`)
-      const newPosts = res.data.data
-      setPosts((prev) => (append ? [...prev, ...newPosts] : newPosts))
+      setPosts(res.data.data)
 
-      // Laravel pagination meta: current_page, last_page, next_page_url
       const meta = res.data.meta
-      setNextPage(meta.current_page + 1)
-      setHasMore(meta.current_page < meta.last_page)
+      setCurrentPage(meta.current_page)
+      setLastPage(meta.last_page)
     } catch (err) {
       setError('Failed to load posts. Please try again later.')
     } finally {
       setLoading(false)
-      setLoadingMore(false)
     }
   }
 
@@ -39,36 +53,103 @@ function BlogList() {
     return <div className="text-center py-12 text-red-600">{error}</div>
 
   return (
-    <div className="space-y-8">
-      <header className="mb-6">
-        <h1 className="text-3xl font-bold">Blog</h1>
-        <p className="text-neutral-600 mt-2">All published posts</p>
+    <div className="mx-auto max-w-6xl px-6 py-14 sm:py-20">
+      {/* Page Header */}
+      <header className="mb-10 flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between gap-6">
+          <div>
+            <h1 className="font-['Geist_Pixel'] text-4xl lowercase text-zinc-900 dark:text-zinc-100 tracking-tight mb-3 animate-fade-up">
+              list of blogs.
+            </h1>
+            <p
+              className="font-['Geist'] text-[15px] text-zinc-500 dark:text-zinc-400 leading-relaxed animate-fade-up"
+              style={{ animationDelay: '70ms' }}
+            >
+              Thoughts, tutorials, and notes on AI, engineering, and building
+              things.
+            </p>
+          </div>
+        </div>
+
+        {posts.length > 0 && (
+          <div className="inline-flex shrink-0 items-center gap-0.5 rounded-lg border border-gray-200 p-0.5">
+            <button
+              onClick={() => switchView('list')}
+              aria-label="List view"
+              aria-pressed={view === 'list'}
+              className={`p-1.5 rounded-[4px] transition-colors duration-200 ${
+                view === 'list'
+                  ? 'bg-gray-100 text-ink'
+                  : 'text-gray-400 hover:text-ink'
+              }`}
+            >
+              <List size={16} weight="regular" />
+            </button>
+            <button
+              onClick={() => switchView('grid')}
+              aria-label="Grid view"
+              aria-pressed={view === 'grid'}
+              className={`p-1.5 rounded-[4px] transition-colors duration-200 ${
+                view === 'grid'
+                  ? 'bg-gray-100 text-ink'
+                  : 'text-gray-400 hover:text-ink'
+              }`}
+            >
+              <SquaresFour size={16} weight="regular" />
+            </button>
+          </div>
+        )}
       </header>
 
       {posts.length === 0 ? (
-        <p className="text-neutral-500 text-center py-12">
-          No posts published yet. Check back soon!
-        </p>
+        <div className="text-center py-16 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
+          <p className="font-['Geist_Mono'] text-[11px] uppercase tracking-[0.08em] text-zinc-400 dark:text-zinc-600 mb-2">
+            no posts yet
+          </p>
+          <p className="font-['Source_Serif_4'] text-[15px] text-zinc-400 dark:text-zinc-500">
+            Check back soon — new articles are on the way.
+          </p>
+        </div>
       ) : (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
-          </div>
-
-          {hasMore && (
-            <div className="text-center pt-4">
-              <button
-                onClick={() => loadPosts(nextPage, true)}
-                disabled={loadingMore}
-                className="bg-blue-600 text-white px-6 py-2 rounded font-medium hover:bg-blue-700 transition-colors disabled:opacity-60"
-              >
-                {loadingMore ? 'Loading...' : 'Load More'}
-              </button>
+        <div key={view} className="animate-fade-in">
+          {view === 'list' ? (
+            <div id="postsContainer" className="view-list">
+              {posts.map((post) => (
+                <PostListItem key={post.id} post={post} />
+              ))}
+            </div>
+          ) : (
+            <div id="postsContainer" className="view-grid">
+              {posts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
             </div>
           )}
-        </>
+
+          <div className="flex items-center justify-between gap-4 pt-8">
+            <button
+              onClick={() => loadPosts(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="flex items-center gap-1.5 font-['Geist_Mono'] text-[11px] uppercase tracking-[0.08em] px-3 py-2 rounded-[6px] border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:border-zinc-900 dark:hover:border-zinc-100 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200 disabled:opacity-30 disabled:pointer-events-none"
+            >
+              <ArrowLeftIcon size={14} weight="regular" />
+              prev.
+            </button>
+
+            <span className="font-['Geist_Mono'] text-[11px] uppercase tracking-[0.08em] text-zinc-400 dark:text-zinc-500 min-w-[3rem] text-center">
+              {currentPage} / {lastPage}
+            </span>
+
+            <button
+              onClick={() => loadPosts(currentPage + 1)}
+              disabled={currentPage === lastPage}
+              className="flex items-center gap-1.5 font-['Geist_Mono'] text-[11px] uppercase tracking-[0.08em] px-3 py-2 rounded-[6px] border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:border-zinc-900 dark:hover:border-zinc-100 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200 disabled:opacity-30 disabled:pointer-events-none"
+            >
+              next.
+              <ArrowRightIcon size={14} weight="regular" />
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )
