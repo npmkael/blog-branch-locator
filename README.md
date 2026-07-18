@@ -22,7 +22,7 @@ This project is a headless content management system where the backend (Laravel 
 
 **Backend:**
 
-- Laravel 12
+- Laravel 13
 - Filament v4 (admin panel)
 - Laravel Eloquent ORM
 - Laravel API Resources
