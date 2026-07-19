@@ -20,7 +20,7 @@ class BranchResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMapPin;
 
-    protected static ?string $recordTitleAttribute = 'Branches';
+    protected static ?string $recordTitleAttribute = 'branch_name';
 
     public static function form(Schema $schema): Schema
     {

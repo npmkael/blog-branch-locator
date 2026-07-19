@@ -269,13 +269,14 @@ Error responses follow this format:
 
 ### Posts
 
-| Method | Endpoint                     | Description                                                                |
-| ------ | ---------------------------- | -------------------------------------------------------------------------- |
-| GET    | `/api/posts`                 | List published posts (paginated, 9 per page). Drafts excluded.             |
-| GET    | `/api/posts?page=2`          | Paginated posts                                                            |
-| GET    | `/api/posts?search=laravel`  | Search posts by title (optional feature)                                   |
-| GET    | `/api/posts?category={slug}` | Filter posts by category slug                                              |
-| GET    | `/api/posts/{slug}`          | Single post with full content. Returns 404 for invalid slug or draft post. |
+| Method | Endpoint                         | Description                                                                |
+| ------ | -------------------------------- | -------------------------------------------------------------------------- |
+| GET    | `/api/posts`                     | List published posts (paginated, 9 per page). Drafts excluded.             |
+| GET    | `/api/posts?page=2`              | Paginated posts                                                            |
+| GET    | `/api/posts?search=laravel`      | Search posts by title (optional feature)                                   |
+| GET    | `/api/posts?category={slug}`     | Filter posts by category slug                                              |
+| GET    | `/api/posts/{slug}`              | Single post with full content and reading time. Returns 404 for invalid slug or draft post. |
+| GET    | `/api/posts/{slug}/related`      | Up to 3 related posts in the same category (excluding the current post).   |
 
 ### Categories
 
@@ -286,18 +287,20 @@ Error responses follow this format:
 
 ### Branches
 
-| Method | Endpoint                         | Description                                                                                  |
-| ------ | -------------------------------- | -------------------------------------------------------------------------------------------- |
-| GET    | `/api/branches`                  | List active branches only. Inactive excluded. Supports query params below.                   |
-| GET    | `/api/branches?search=makati`    | Search across branch name, code, address, city, province                                     |
-| GET    | `/api/branches?city=Makati`      | Filter by city                                                                               |
-| GET    | `/api/branches?province=Bulacan` | Filter by province                                                                           |
-| GET    | `/api/branches/{slug}`           | Single active branch with full details. Returns 404 for invalid slug **or inactive branch**. |
+| Method | Endpoint                           | Description                                                                                  |
+| ------ | ---------------------------------- | -------------------------------------------------------------------------------------------- |
+| GET    | `/api/branches`                    | List active branches only. Inactive excluded. Supports query params below.                   |
+| GET    | `/api/branches?search=makati`      | Search across branch name, code, address, city, province                                     |
+| GET    | `/api/branches?city=Makati`        | Filter by city                                                                               |
+| GET    | `/api/branches?province=Bulacan`   | Filter by province                                                                           |
+| GET    | `/api/branches/nearby?latitude=&longitude=` | Up to 10 nearest active branches ordered by distance (Haversine). Validates lat (-90..90) and lng (-180..180). |
+| GET    | `/api/branches/{slug}`             | Single active branch with full details. Returns 404 for invalid slug **or inactive branch**. |
 
 ### HTTP Status Codes Used
 
 - `200 OK` — successful request
 - `404 Not Found` — record not found, invalid slug, draft post, or inactive branch
+- `422 Unprocessable Entity` — validation error (e.g., nearby endpoint with invalid latitude/longitude)
 - `500 Internal Server Error` — server-side failure
 
 ---
@@ -345,17 +348,20 @@ No paid map service is used.
 
 This project does **not** use a geocoding service. Branch coordinates (latitude and longitude) are entered manually by the administrator in the Filament branch form, as permitted by the examination requirements.
 
-If geocoding is desired in the future, a compatible service such as Nominatim (OpenStreetMap) could be integrated — but coordinates must be cached to avoid excessive requests.
+The frontend uses the browser's native `navigator.geolocation` API for the "Find branches near me" feature. This is **not** geocoding — it relies on the visitor's device (GPS/IP) and requires their permission. No external geocoding API is called.
+
+If address geocoding is desired in the future, a compatible service such as Nominatim (OpenStreetMap) could be integrated — but coordinates must be cached to avoid excessive requests.
 
 ---
 
 ## Known Limitations
 
-- Branch search/filtering is performed client-side after a single API fetch. For very large branch counts, server-side filtering with pagination would scale better.
+- Branch search/filtering on the locator page is performed client-side after a single API fetch. For very large branch counts, the server-side `/api/branches/nearby` endpoint (Haversine) would scale better.
 - Post search is limited to the title field.
 - No authentication on public API endpoints (intentional — content is public).
 - No automated tests included (manual testing performed; see below).
 - Rich text content is rendered with `dangerouslySetInnerHTML`. In production, consider sanitizing HTML server-side.
+- Browser geolocation requires HTTPS in production (works on `localhost` in development).
 
 ---
 
@@ -367,12 +373,27 @@ None. All core requirements from the examination specification are implemented a
 
 ## Optional Features Implemented
 
+**Frontend enhancements:**
 - Author profile image displayed in post cards and post detail
-- Post search via `?search=` query parameter
+- Post search on the blog listing page (`?search=` with debounce)
 - Blog list view toggle (list view / grid view) with preference persisted in `localStorage`
 - "Get Directions" link on branch detail opening OpenStreetMap with the branch location
 - Map flies to a branch when its list card is clicked (focus interaction)
 - Loading spinner with contextual labels per page
+- Dynamic document titles per page (SEO-friendly browser tab titles)
+- Lazy-loaded images for faster initial page loads
+- "Find branches near me" button using browser geolocation, with distance sorting and per-card distance display
+- Related posts grid on the blog detail page
+- Reading time estimate on the blog detail page (e.g., "5 min read")
+
+**Backend enhancements:**
+- Related posts endpoint (`GET /api/posts/{slug}/related`)
+- Nearby branch endpoint (`GET /api/branches/nearby`) using the Haversine formula in SQL, with latitude/longitude validation
+- Reading time computed server-side in the Post API Resource
+
+**Admin (Filament) enhancements:**
+- Live OpenStreetMap map preview inside the branch form (updates as coordinates are entered)
+- Distinct navigation icons for each Filament resource (Category, Author, Post, Branch)
 
 ---
 
@@ -385,13 +406,23 @@ The following flows have been manually tested:
 - Image uploads (author, post, branch)
 - Post status filtering (draft/published) in the admin
 - Branch status filtering (active/inactive) in the admin
+- Branch coordinate validation (latitude -90..90, longitude -180..180)
+- Live map preview in the branch form
 - API pagination
 - Category filtering
+- Post search (`?search=`)
 - Branch search and city/province filtering
+- Related posts endpoint
+- Nearby branch endpoint with valid and invalid coordinates
 - Blog listing, detail, and category pages
+- Post search on the blog listing page
+- Reading time display on blog detail
+- Related posts grid on blog detail
 - Branch locator map markers and popups
+- "Find branches near me" (geolocation + distance sorting)
 - Branch detail page with directions
 - Loading, empty, error, and not-found states
+- Document titles per page
 - Responsive layouts (desktop, tablet, mobile)
 
 ---
