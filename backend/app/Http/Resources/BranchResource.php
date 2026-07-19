@@ -35,6 +35,7 @@ class BranchResource extends JsonResource
             'featured_image' => $this->featured_image
                 ? asset('storage/' . $this->featured_image)
                 : null,
+            'distance' => $this->when(isset($this->distance), fn () => round($this->distance, 2)),
         ];
     }
 }

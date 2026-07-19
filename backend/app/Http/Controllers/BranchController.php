@@ -39,4 +39,32 @@ class BranchController extends Controller
 
         return BranchResource::make($branch);
     }
+
+    public function nearby(Request $request)
+    {
+        $request->validate([
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+        ]);
+
+        $lat = $request->latitude;
+        $lng = $request->longitude;
+
+        $branches = Branch::active()
+            ->select('*')
+            ->selectRaw("
+                (6371 * acos(
+                    cos(radians(?))
+                    * cos(radians(latitude))
+                    * cos(radians(longitude) - radians(?))
+                    + sin(radians(?))
+                    * sin(radians(latitude))
+                )) AS distance
+            ", [$lat, $lng, $lat])
+            ->orderBy('distance')
+            ->limit(10)
+            ->get();
+
+        return BranchResource::collection($branches);
+    }
 }

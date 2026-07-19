@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router'
 import client from '../api/client'
 import Loading from '../components/Loading'
+import PostCard from '../components/PostCard'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { CaretLeftIcon } from '@phosphor-icons/react'
 import { User } from '@phosphor-icons/react'
 
@@ -11,15 +13,19 @@ import { formatDate } from '../utils/formatDate'
 function BlogDetail() {
   const { slug } = useParams()
   const [post, setPost] = useState(null)
+  const [relatedPosts, setRelatedPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [error, setError] = useState(null)
+
+  useDocumentTitle(post?.title)
 
   useEffect(() => {
     async function fetchPost() {
       setLoading(true)
       setNotFound(false)
       setError(null)
+      setRelatedPosts([])
       try {
         const res = await client.get(`/posts/${slug}`)
         setPost(res.data.data)
@@ -35,6 +41,15 @@ function BlogDetail() {
     }
     fetchPost()
   }, [slug])
+
+  // Fetch related posts once the main post is loaded
+  useEffect(() => {
+    if (!post?.slug) return
+    client
+      .get(`/posts/${post.slug}/related`)
+      .then((res) => setRelatedPosts(res.data.data))
+      .catch(() => setRelatedPosts([]))
+  }, [post])
 
   if (loading) return <Loading label="Loading post..." />
   if (notFound)
@@ -82,6 +97,12 @@ function BlogDetail() {
           >
             {post.category.name}
           </Link>
+          {post.reading_time && (
+            <>
+              <span className="text-gray-300">·</span>
+              <span>{post.reading_time}</span>
+            </>
+          )}
         </div>
 
         <h1 className="font-['Geist'] mt-3 text-[28px] font-semibold leading-tight tracking-tight text-ink sm:text-[34px]">
@@ -99,6 +120,7 @@ function BlogDetail() {
                 <img
                   src={post.author.profile_image}
                   alt={post.author.name}
+                  loading="lazy"
                   className="h-8 w-8 shrink-0 rounded-full border border-gray-200 object-cover"
                 />
               ) : (
@@ -121,6 +143,7 @@ function BlogDetail() {
           <img
             src={post.featured_image}
             alt={post.title}
+            loading="lazy"
             className="aspect-[2/1] w-full object-cover"
           />
         </figure>
@@ -130,6 +153,19 @@ function BlogDetail() {
         className="prose max-w-none prose-p:my-4 prose-headings:my-4 prose-headings:font-['Geist'] prose-p:font-['Source_Serif_4']"
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
+
+      {relatedPosts.length > 0 && (
+        <section className="mt-16 pt-12 border-t border-gray-200">
+          <h2 className="font-['Geist'] text-xl font-semibold mb-6">
+            related posts
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {relatedPosts.map((p) => (
+              <PostCard key={p.id} post={p} />
+            ))}
+          </div>
+        </section>
+      )}
 
       <footer
         className="mt-12 flex items-center 

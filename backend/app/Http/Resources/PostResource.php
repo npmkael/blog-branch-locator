@@ -23,6 +23,12 @@ class PostResource extends JsonResource
                 $request->routeIs('api.posts.show'),
                 $this->content
             ),
+            'reading_time' => $this->when(
+                $request->routeIs('api.posts.show'),
+                $this->content
+                    ? ceil(str_word_count(strip_tags($this->content)) / 200) . ' min read'
+                    : null
+            ),
             'featured_image' => $this->featured_image
                 ? asset('storage/' . $this->featured_image)
                 : null,

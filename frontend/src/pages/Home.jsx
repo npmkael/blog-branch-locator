@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { Article, Tree } from '@phosphor-icons/react'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import client from '../api/client'
 import PostCard from '../components/PostCard'
 import Loading from '../components/Loading'
 
 function Home() {
+  useDocumentTitle('bloggy')
   const [posts, setPosts] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
@@ -29,9 +31,12 @@ function Home() {
     fetchData()
   }, [])
 
-  if (loading) return <Loading label="Loading home page..." />
   if (error)
-    return <div className="text-center py-12 text-red-600">{error}</div>
+    return (
+      <div className="text-center py-12 font-['Geist_Mono'] text-[11px] uppercase tracking-[0.08em] text-red-500 dark:text-red-400">
+        {error}
+      </div>
+    )
 
   return (
     <div className="space-y-12">
@@ -105,7 +110,9 @@ function Home() {
             <span className="text-[10px]">↗</span>
           </Link>
         </div>
-        {posts.length === 0 ? (
+        {loading ? (
+          <Loading label="Loading posts..." />
+        ) : posts.length === 0 ? (
           <p className="text-zinc-400 dark:text-zinc-600 font-['Geist_Mono'] text-[11px] uppercase tracking-[0.08em] text-center py-12">
             no posts published yet
           </p>

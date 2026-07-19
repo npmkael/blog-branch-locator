@@ -10,6 +10,7 @@ function PostCard({ post }) {
           <img
             src={post.featured_image}
             alt={post.title}
+            loading="lazy"
             className="w-full h-44 object-cover transition-transform duration-500 group-hover:scale-[1.04]"
           />
         </Link>
@@ -42,6 +43,7 @@ function PostCard({ post }) {
                   <img
                     src={post.author.profile_image}
                     alt={post.author.name}
+                    loading="lazy"
                     className="w-full h-full object-cover"
                   />
                 ) : (

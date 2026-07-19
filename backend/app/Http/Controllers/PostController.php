@@ -39,4 +39,23 @@ class PostController extends Controller
 
         return PostResource::make($post);
     }
+
+    public function related(string $slug)
+    {
+        $post = Post::published()->where('slug', $slug)->first();
+
+        if (! $post) {
+            return response()->json(['message' => 'Post not found.'], 404);
+        }
+
+        $related = Post::published()
+            ->with(['category', 'author'])
+            ->where('category_id', $post->category_id)
+            ->where('id', '!=', $post->id)
+            ->latest('published_date')
+            ->limit(3)
+            ->get();
+
+        return PostResource::collection($related);
+    }
 }

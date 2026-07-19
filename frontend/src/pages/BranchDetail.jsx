@@ -11,6 +11,7 @@ import {
 import client from '../api/client'
 import Loading from '../components/Loading'
 import MapView from '../components/MapView'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 function BranchDetail() {
   const { slug } = useParams()
@@ -18,6 +19,8 @@ function BranchDetail() {
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [error, setError] = useState(null)
+
+  useDocumentTitle(branch?.branch_name)
 
   useEffect(() => {
     async function fetchBranch() {
@@ -120,6 +123,7 @@ function BranchDetail() {
           <img
             src={branch.featured_image}
             alt={branch.branch_name}
+            loading="lazy"
             className="w-full max-h-80 object-cover"
           />
         </div>

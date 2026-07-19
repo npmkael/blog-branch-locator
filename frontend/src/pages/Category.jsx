@@ -4,6 +4,7 @@ import { ArrowLeft } from '@phosphor-icons/react'
 import client from '../api/client'
 import PostCard from '../components/PostCard'
 import Loading from '../components/Loading'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 function Category() {
   const { slug } = useParams()
@@ -12,6 +13,8 @@ function Category() {
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [error, setError] = useState(null)
+
+  useDocumentTitle(category?.name)
 
   useEffect(() => {
     async function fetchCategory() {

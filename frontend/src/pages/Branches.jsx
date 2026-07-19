@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import {
   ArrowRight,
   Clock,
+  Crosshair,
   MagnifyingGlass,
   MapPin,
   Phone,
@@ -11,8 +12,10 @@ import {
 import client from '../api/client'
 import MapView from '../components/MapView'
 import Loading from '../components/Loading'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 function Branches() {
+  useDocumentTitle('branches')
   const [branches, setBranches] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -20,6 +23,64 @@ function Branches() {
   const [cityFilter, setCityFilter] = useState('')
   const [provinceFilter, setProvinceFilter] = useState('')
   const [selectedBranch, setSelectedBranch] = useState(null)
+  const [userLocation, setUserLocation] = useState(null)
+  const [locating, setLocating] = useState(false)
+  const [geoError, setGeoError] = useState(null)
+
+  // Haversine distance (km) between two coordinates
+  function calculateDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371
+    const dLat = ((lat2 - lat1) * Math.PI) / 180
+    const dLng = ((lng2 - lng1) * Math.PI) / 180
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return R * c
+  }
+
+  function handleFindNearMe() {
+    if (!navigator.geolocation) {
+      setGeoError('Geolocation is not supported by your browser.')
+      return
+    }
+    setLocating(true)
+    setGeoError(null)
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const userLat = position.coords.latitude
+        const userLng = position.coords.longitude
+        setUserLocation({ lat: userLat, lng: userLng })
+
+        // Auto-select the nearest branch so the map flies to it
+        if (branches.length > 0) {
+          let nearest = null
+          let nearestDist = Infinity
+          for (const b of branches) {
+            const d = calculateDistance(userLat, userLng, b.latitude, b.longitude)
+            if (d < nearestDist) {
+              nearestDist = d
+              nearest = b
+            }
+          }
+          setSelectedBranch(nearest)
+        }
+        setLocating(false)
+      },
+      (err) => {
+        setGeoError(
+          err.code === 1
+            ? 'Location access denied. Please enable permissions.'
+            : 'Could not determine your location.'
+        )
+        setLocating(false)
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
 
   // Fetch all active branches once on mount
   useEffect(() => {
@@ -47,7 +108,7 @@ function Branches() {
 
   // Client-side filtering (fast, no refetch)
   const filteredBranches = useMemo(() => {
-    return branches.filter((branch) => {
+    const filtered = branches.filter((branch) => {
       const q = searchQuery.toLowerCase()
       const matchesSearch =
         !q ||
@@ -63,13 +124,35 @@ function Branches() {
 
       return matchesSearch && matchesCity && matchesProvince
     })
-  }, [branches, searchQuery, cityFilter, provinceFilter])
+
+    // Sort by distance if user location is available
+    if (userLocation) {
+      return filtered
+        .map((branch) => ({
+          ...branch,
+          _distance: calculateDistance(
+            userLocation.lat,
+            userLocation.lng,
+            branch.latitude,
+            branch.longitude
+          ),
+        }))
+        .sort((a, b) => a._distance - b._distance)
+    }
+
+    return filtered
+  }, [branches, searchQuery, cityFilter, provinceFilter, userLocation])
 
   function handleResetFilters() {
     setSearchQuery('')
     setCityFilter('')
     setProvinceFilter('')
     setSelectedBranch(null)
+  }
+
+  function handleClearLocation() {
+    setUserLocation(null)
+    setGeoError(null)
   }
 
   if (loading) return <Loading label="Loading branches..." />
@@ -128,6 +211,23 @@ function Branches() {
             className="w-full bg-gray-50 border border-gray-200 rounded-[6px] pl-9 pr-4 py-2.5 text-[13px] font-['Geist_Mono'] text-ink placeholder:text-gray-400 focus:outline-none focus:border-ink transition-colors duration-200"
           />
         </div>
+        <button
+          onClick={handleFindNearMe}
+          disabled={locating}
+          className="inline-flex items-center gap-1.5 font-['Geist_Mono'] text-[11px] uppercase tracking-[0.08em] px-4 py-2.5 rounded-[6px] border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all duration-200 disabled:opacity-60"
+        >
+          <Crosshair size={14} weight="regular" className={locating ? 'animate-spin' : ''} />
+          {locating ? 'locating...' : 'near me'}
+        </button>
+        {userLocation && (
+          <button
+            onClick={handleClearLocation}
+            className="inline-flex items-center gap-1.5 font-['Geist_Mono'] text-[11px] uppercase tracking-[0.08em] px-4 py-2.5 rounded-[6px] border border-gray-200 text-gray-500 hover:border-ink hover:text-ink transition-all duration-200"
+          >
+            <X size={14} weight="regular" />
+            location
+          </button>
+        )}
         <select
           value={cityFilter}
           onChange={(e) => setCityFilter(e.target.value)}
@@ -163,12 +263,20 @@ function Branches() {
         )}
       </div>
 
+      {/* Geolocation error */}
+      {geoError && (
+        <div className="font-['Geist_Mono'] text-[11px] uppercase tracking-[0.08em] text-red-500 text-center">
+          {geoError}
+        </div>
+      )}
+
       {/* Map */}
       {filteredBranches.length > 0 ? (
         <MapView
           branches={filteredBranches}
           selectedBranch={selectedBranch}
           onMarkerClick={setSelectedBranch}
+          userLocation={userLocation}
         />
       ) : (
         <div className="border border-dashed border-gray-200 bg-gray-50 rounded-2xl py-12 text-center">
@@ -241,6 +349,20 @@ function Branches() {
                     }
                   />
                 </div>
+
+                {branch._distance != null && (
+                  <p
+                    className={`text-[11px] mt-1.5 font-['Geist_Mono'] uppercase tracking-[0.06em] ${
+                      selectedBranch?.id === branch.id
+                        ? 'text-blue-300'
+                        : 'text-blue-500'
+                    }`}
+                  >
+                    {branch._distance < 1
+                      ? `${Math.round(branch._distance * 1000)} m away`
+                      : `${branch._distance.toFixed(1)} km away`}
+                  </p>
+                )}
 
                 <p
                   className={`text-[13px] mt-3 leading-relaxed ${

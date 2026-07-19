@@ -2,22 +2,26 @@ import { useEffect, useState } from 'react'
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
-  CaretLeft,
-  CaretRight,
   List,
+  MagnifyingGlass,
   SquaresFour,
+  X,
 } from '@phosphor-icons/react'
 import client from '../api/client'
 import PostCard from '../components/PostCard'
 import PostListItem from '../components/PostListItem'
 import Loading from '../components/Loading'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 function BlogList() {
+  useDocumentTitle('blog')
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [lastPage, setLastPage] = useState(1)
+  const [searchInput, setSearchInput] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
   const [view, setView] = useState(() => {
     if (typeof window === 'undefined') return 'list'
     return localStorage.getItem('blog-view') || 'list'
@@ -28,10 +32,12 @@ function BlogList() {
     localStorage.setItem('blog-view', next)
   }
 
-  async function loadPosts(page = 1) {
+  async function loadPosts(page = 1, search = '') {
     try {
       setLoading(true)
-      const res = await client.get(`/posts?page=${page}`)
+      const params = new URLSearchParams({ page: String(page) })
+      if (search) params.append('search', search)
+      const res = await client.get(`/posts?${params.toString()}`)
       setPosts(res.data.data)
 
       const meta = res.data.meta
@@ -44,18 +50,34 @@ function BlogList() {
     }
   }
 
+  // Debounce search input -> search query (400ms)
   useEffect(() => {
-    loadPosts(1, false)
-  }, [])
+    const timer = setTimeout(() => setSearchQuery(searchInput), 400)
+    return () => clearTimeout(timer)
+  }, [searchInput])
 
-  if (loading) return <Loading label="Loading posts..." />
+  // Reload posts whenever the debounced search query changes
+  // (this also fires on mount with empty search → initial load)
+  useEffect(() => {
+    loadPosts(1, searchQuery)
+  }, [searchQuery])
+
+  function clearSearch() {
+    setSearchInput('')
+    setSearchQuery('')
+  }
+
   if (error)
-    return <div className="text-center py-12 text-red-600">{error}</div>
+    return (
+      <div className="text-center py-12 font-['Geist_Mono'] text-[11px] uppercase tracking-[0.08em] text-red-500 dark:text-red-400">
+        {error}
+      </div>
+    )
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-14 sm:py-20">
       {/* Page Header */}
-      <header className="mb-10 flex items-start justify-between gap-4">
+      <header className="mb-8 flex items-start justify-between gap-4">
         <div className="flex items-start justify-between gap-6">
           <div>
             <h1 className="font-['Geist_Pixel'] text-4xl lowercase text-zinc-900 dark:text-zinc-100 tracking-tight mb-3 animate-fade-up">
@@ -101,17 +123,48 @@ function BlogList() {
         )}
       </header>
 
-      {posts.length === 0 ? (
+      {/* Search */}
+      <div className="mb-8 flex items-center gap-3">
+        <div className="relative w-full max-w-md">
+          <MagnifyingGlass
+            size={14}
+            weight="regular"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          />
+          <input
+            type="text"
+            placeholder="search posts..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="w-full bg-gray-50 border border-gray-200 rounded-[6px] pl-9 pr-9 py-2.5 text-[13px] font-['Geist_Mono'] text-ink placeholder:text-gray-400 focus:outline-none focus:border-ink transition-colors duration-200"
+          />
+          {searchInput && (
+            <button
+              onClick={clearSearch}
+              aria-label="Clear search"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-ink transition-colors duration-200 p-1"
+            >
+              <X size={14} weight="regular" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {loading ? (
+        <Loading label="Loading posts..." />
+      ) : posts.length === 0 ? (
         <div className="text-center py-16 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
           <p className="font-['Geist_Mono'] text-[11px] uppercase tracking-[0.08em] text-zinc-400 dark:text-zinc-600 mb-2">
-            no posts yet
+            {searchQuery ? `no results for "${searchQuery}"` : 'no posts yet'}
           </p>
           <p className="font-['Source_Serif_4'] text-[15px] text-zinc-400 dark:text-zinc-500">
-            Check back soon — new articles are on the way.
+            {searchQuery
+              ? 'Try a different search term.'
+              : 'Check back soon — new articles are on the way.'}
           </p>
         </div>
       ) : (
-        <div key={view} className="animate-fade-in">
+        <div key={view + searchQuery} className="animate-fade-in">
           {view === 'list' ? (
             <div id="postsContainer" className="view-list">
               {posts.map((post) => (
@@ -128,7 +181,7 @@ function BlogList() {
 
           <div className="flex items-center justify-between gap-4 pt-8">
             <button
-              onClick={() => loadPosts(currentPage - 1)}
+              onClick={() => loadPosts(currentPage - 1, searchQuery)}
               disabled={currentPage === 1}
               className="flex items-center gap-1.5 font-['Geist_Mono'] text-[11px] uppercase tracking-[0.08em] px-3 py-2 rounded-[6px] border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:border-zinc-900 dark:hover:border-zinc-100 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200 disabled:opacity-30 disabled:pointer-events-none"
             >
@@ -141,7 +194,7 @@ function BlogList() {
             </span>
 
             <button
-              onClick={() => loadPosts(currentPage + 1)}
+              onClick={() => loadPosts(currentPage + 1, searchQuery)}
               disabled={currentPage === lastPage}
               className="flex items-center gap-1.5 font-['Geist_Mono'] text-[11px] uppercase tracking-[0.08em] px-3 py-2 rounded-[6px] border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:border-zinc-900 dark:hover:border-zinc-100 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200 disabled:opacity-30 disabled:pointer-events-none"
             >

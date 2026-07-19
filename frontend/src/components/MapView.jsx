@@ -31,7 +31,15 @@ function FocusController({ selectedBranch }) {
   return null
 }
 
-function MapView({ branches, selectedBranch, onMarkerClick }) {
+// Custom blue dot icon for user's location
+const userLocationIcon = L.divIcon({
+  className: 'user-location-marker',
+  html: '<div style="width:16px;height:16px;background:#3b82f6;border:3px solid white;border-radius:50%;box-shadow:0 0 8px rgba(0,0,0,0.3);"></div>',
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+})
+
+function MapView({ branches, selectedBranch, onMarkerClick, userLocation }) {
   // Default center: Philippines. If branches exist, center on first one.
   const center =
     branches.length > 0
@@ -87,6 +95,20 @@ function MapView({ branches, selectedBranch, onMarkerClick }) {
           </Popup>
         </Marker>
       ))}
+
+      {/* User's current location marker */}
+      {userLocation && (
+        <Marker
+          position={[userLocation.lat, userLocation.lng]}
+          icon={userLocationIcon}
+        >
+          <Popup>
+            <div className="text-sm">
+              <strong>You are here</strong>
+            </div>
+          </Popup>
+        </Marker>
+      )}
 
       {/* Focus on selected branch when list item is clicked */}
       <FocusController selectedBranch={selectedBranch} />

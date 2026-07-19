@@ -1,4 +1,7 @@
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
+
 function NotFound() {
+  useDocumentTitle('not found')
   return (
     <div className="text-center py-20">
       <h1 className="text-6xl font-bold text-neutral-900 mb-4">404</h1>
