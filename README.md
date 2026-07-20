@@ -54,13 +54,17 @@ The following screenshots illustrate the main features of the application. All i
 
 ### Public Blog
 
-| Blog listing                                           | Blog listing (alt view)                                | Blog listing (grid)                                    |
-| ------------------------------------------------------ | ------------------------------------------------------ | ------------------------------------------------------ |
-| ![Blog listing 1](demo/screenshots/blog-listing-1.png) | ![Blog listing 2](demo/screenshots/blog-listing-2.png) | ![Blog listing 3](demo/screenshots/blog-listing-3.png) |
+| Blog listing                                           | Blog listing (alt view)                                |
+| ------------------------------------------------------ | ------------------------------------------------------ |
+| ![Blog listing 1](demo/screenshots/blog-listing-2.png) | ![Blog listing 2](demo/screenshots/blog-listing-3.png) |
 
-| Blog detail (header + reading time)                   | Blog detail (content + related posts)                 |
-| ----------------------------------------------------- | ----------------------------------------------------- |
-| ![Blog detail 1](demo/screenshots/blog-details-1.png) | ![Blog detail 2](demo/screenshots/blog-details-2.png) |
+| Blog listing (grid)                                    | Blog detail (header + reading time)                   |
+| ------------------------------------------------------ | ----------------------------------------------------- |
+| ![Blog listing 3](demo/screenshots/blog-listing-3.png) | ![Blog detail 1](demo/screenshots/blog-details-1.png) |
+
+| Blog detail (content + related posts)                 |     |
+| ----------------------------------------------------- | --- |
+| ![Blog detail 2](demo/screenshots/blog-details-2.png) |     |
 
 ### Branch Locator (OpenStreetMap)
 
