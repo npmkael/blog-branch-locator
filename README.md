@@ -18,6 +18,64 @@ This project is a headless content management system where the backend (Laravel 
 
 ---
 
+## Demonstration
+
+The following screenshots illustrate the main features of the application. All images are located in `demo/screenshots/`.
+
+### Filament Admin Panel
+
+**Login & Dashboard**
+
+| Login page                                             | Dashboard                                                      |
+| ------------------------------------------------------ | -------------------------------------------------------------- |
+| ![Filament login](demo/screenshots/filament-login.png) | ![Filament dashboard](demo/screenshots/filament-dashboard.png) |
+
+### Post Management (Admin)
+
+| Post list                                    | Create post form                                      |
+| -------------------------------------------- | ----------------------------------------------------- |
+| ![Post list](demo/screenshots/post-list.png) | ![Create post](demo/screenshots/post-create-form.png) |
+
+### Branch Management (Admin)
+
+| Branch list                                          | Create branch form (with live map preview)                  |
+| ---------------------------------------------------- | ----------------------------------------------------------- |
+| ![Branches list](demo/screenshots/branches-list.png) | ![Create branch](demo/screenshots/branch-create-form-1.png) |
+
+| Map preview on coordinate entry                                       |
+| --------------------------------------------------------------------- |
+| ![Branch form map preview](demo/screenshots/branch-create-form-2.png) |
+
+### Public Website — Home
+
+| Home (top)                                     | Home (categories)                              |
+| ---------------------------------------------- | ---------------------------------------------- |
+| ![Homepage 1](demo/screenshots/homepage-1.png) | ![Homepage 2](demo/screenshots/homepage-2.png) |
+
+### Public Blog
+
+| Blog listing                                           | Blog listing (alt view)                                | Blog listing (grid)                                    |
+| ------------------------------------------------------ | ------------------------------------------------------ | ------------------------------------------------------ |
+| ![Blog listing 1](demo/screenshots/blog-listing-1.png) | ![Blog listing 2](demo/screenshots/blog-listing-2.png) | ![Blog listing 3](demo/screenshots/blog-listing-3.png) |
+
+| Blog detail (header + reading time)                   | Blog detail (content + related posts)                 |
+| ----------------------------------------------------- | ----------------------------------------------------- |
+| ![Blog detail 1](demo/screenshots/blog-details-1.png) | ![Blog detail 2](demo/screenshots/blog-details-2.png) |
+
+### Branch Locator (OpenStreetMap)
+
+| Locator with map & markers                                 | Locator (search/filter)                                    | Locator (results)                                          |
+| ---------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------- |
+| ![Branch locator 1](demo/screenshots/branch-locator-1.png) | ![Branch locator 2](demo/screenshots/branch-locator-2.png) | ![Branch locator 3](demo/screenshots/branch-locator-3.png) |
+
+### Branch Detail
+
+| Branch detail (info + map)                               | Branch detail (directions)                               |
+| -------------------------------------------------------- | -------------------------------------------------------- |
+| ![Branch detail 1](demo/screenshots/branch-detail-1.png) | ![Branch detail 2](demo/screenshots/branch-detail-2.png) |
+
+---
+
 ## Technologies Used
 
 **Backend:**
@@ -269,14 +327,14 @@ Error responses follow this format:
 
 ### Posts
 
-| Method | Endpoint                         | Description                                                                |
-| ------ | -------------------------------- | -------------------------------------------------------------------------- |
-| GET    | `/api/posts`                     | List published posts (paginated, 9 per page). Drafts excluded.             |
-| GET    | `/api/posts?page=2`              | Paginated posts                                                            |
-| GET    | `/api/posts?search=laravel`      | Search posts by title (optional feature)                                   |
-| GET    | `/api/posts?category={slug}`     | Filter posts by category slug                                              |
-| GET    | `/api/posts/{slug}`              | Single post with full content and reading time. Returns 404 for invalid slug or draft post. |
-| GET    | `/api/posts/{slug}/related`      | Up to 3 related posts in the same category (excluding the current post).   |
+| Method | Endpoint                     | Description                                                                                 |
+| ------ | ---------------------------- | ------------------------------------------------------------------------------------------- |
+| GET    | `/api/posts`                 | List published posts (paginated, 9 per page). Drafts excluded.                              |
+| GET    | `/api/posts?page=2`          | Paginated posts                                                                             |
+| GET    | `/api/posts?search=laravel`  | Search posts by title (optional feature)                                                    |
+| GET    | `/api/posts?category={slug}` | Filter posts by category slug                                                               |
+| GET    | `/api/posts/{slug}`          | Single post with full content and reading time. Returns 404 for invalid slug or draft post. |
+| GET    | `/api/posts/{slug}/related`  | Up to 3 related posts in the same category (excluding the current post).                    |
 
 ### Categories
 
@@ -287,14 +345,14 @@ Error responses follow this format:
 
 ### Branches
 
-| Method | Endpoint                           | Description                                                                                  |
-| ------ | ---------------------------------- | -------------------------------------------------------------------------------------------- |
-| GET    | `/api/branches`                    | List active branches only. Inactive excluded. Supports query params below.                   |
-| GET    | `/api/branches?search=makati`      | Search across branch name, code, address, city, province                                     |
-| GET    | `/api/branches?city=Makati`        | Filter by city                                                                               |
-| GET    | `/api/branches?province=Bulacan`   | Filter by province                                                                           |
+| Method | Endpoint                                    | Description                                                                                                    |
+| ------ | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| GET    | `/api/branches`                             | List active branches only. Inactive excluded. Supports query params below.                                     |
+| GET    | `/api/branches?search=makati`               | Search across branch name, code, address, city, province                                                       |
+| GET    | `/api/branches?city=Makati`                 | Filter by city                                                                                                 |
+| GET    | `/api/branches?province=Bulacan`            | Filter by province                                                                                             |
 | GET    | `/api/branches/nearby?latitude=&longitude=` | Up to 10 nearest active branches ordered by distance (Haversine). Validates lat (-90..90) and lng (-180..180). |
-| GET    | `/api/branches/{slug}`             | Single active branch with full details. Returns 404 for invalid slug **or inactive branch**. |
+| GET    | `/api/branches/{slug}`                      | Single active branch with full details. Returns 404 for invalid slug **or inactive branch**.                   |
 
 ### HTTP Status Codes Used
 
@@ -374,6 +432,7 @@ None. All core requirements from the examination specification are implemented a
 ## Optional Features Implemented
 
 **Frontend enhancements:**
+
 - Author profile image displayed in post cards and post detail
 - Post search on the blog listing page (`?search=` with debounce)
 - Blog list view toggle (list view / grid view) with preference persisted in `localStorage`
@@ -387,11 +446,13 @@ None. All core requirements from the examination specification are implemented a
 - Reading time estimate on the blog detail page (e.g., "5 min read")
 
 **Backend enhancements:**
+
 - Related posts endpoint (`GET /api/posts/{slug}/related`)
 - Nearby branch endpoint (`GET /api/branches/nearby`) using the Haversine formula in SQL, with latitude/longitude validation
 - Reading time computed server-side in the Post API Resource
 
 **Admin (Filament) enhancements:**
+
 - Live OpenStreetMap map preview inside the branch form (updates as coordinates are entered)
 - Distinct navigation icons for each Filament resource (Category, Author, Post, Branch)
 
